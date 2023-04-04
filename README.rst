@@ -16,10 +16,8 @@ Examples
     :stream: stderr
 
     # Read from stderr instead of stdout.
-    $ time sleep 0.5
-    real 0m0.5...s
-    user 0m0.0...s
-    sys 0m0.0...s
+    $ echo message on stderr >&2
+    message on stderr
 
 .. shtest::
     :returncode: 1
@@ -38,4 +36,4 @@ Examples
 Installation
 ------------
 
-Run :code:`pip install sphinxcontrib-shtest` to install the package and add :code:`"sphinxcontrib-shtest"` to your :code:`extensions` list in :code:`conf.py` (see `here <https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-extensions>`__ for details).
+Run :code:`pip install sphinxcontrib-shtest` to install the package and add :code:`"sphinxcontrib-shtest"` to your :code:`extensions` list in :code:`conf.py` (see `here <https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-extensions>`__ for details). Then execute :code:`sphinx-build -b shtest /path/to/source/directory /path/to/output/directory`.
