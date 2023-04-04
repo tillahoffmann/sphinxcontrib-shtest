@@ -1,0 +1,7 @@
+__pycache__
+.cook
+.coverage
+.DS_Store
+*.egg-info
+dist
+docs/_build
