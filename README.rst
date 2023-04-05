@@ -13,7 +13,7 @@ Examples
     hello world
 
 .. shtest::
-    :stream: stderr
+    :stderr:
 
     # Read from stderr instead of stdout.
     $ echo message on stderr >&2
