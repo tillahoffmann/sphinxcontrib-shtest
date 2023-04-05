@@ -52,6 +52,8 @@ class ShTest:
         # Resolve the working directory relative to the source document.
         if self.source and self.cwd:
             self.cwd = (Path(self.source).parent / self.cwd).resolve()
+        elif self.source:
+            self.cwd = Path(self.source).parent
 
     def run(self) -> None:
         kwargs = {
@@ -180,7 +182,7 @@ class ShTestBuilder(Builder):
     def prepare_writing(self, docnames: set[str]) -> None:
         pass
 
-    def get_target_uri(self, docname: str, typ: str = None) -> str:
+    def get_target_uri(self, docname: str, typ: str = None) -> str:  # pragma: no cover
         return ""
 
 
@@ -197,5 +199,5 @@ def strip_colors(text: str) -> str:
             for code in vars(ansi_codes).values():
                 text = text.replace(code, "")
         return text
-    except ImportError:
+    except ImportError:  # pragma: no cover
         return text
