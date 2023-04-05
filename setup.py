@@ -2,7 +2,9 @@ from setuptools import find_namespace_packages, setup
 
 with open("README.rst") as fp:
     long_description = fp.read()
-long_description = long_description.replace(".. shtest::", ".. code-block::\n")
+long_description = long_description \
+    .replace(".. shtest::", ".. code-block::\n") \
+    .replace(".. sh::", "..")
 
 setup(
     name="sphinxcontrib-shtest",
