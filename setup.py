@@ -8,7 +8,7 @@ long_description = long_description \
 
 setup(
     name="sphinxcontrib-shtest",
-    version="0.3.1",
+    version="0.4.0",
     packages=find_namespace_packages(),
     install_requires=[
         "sphinx",
