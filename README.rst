@@ -33,6 +33,19 @@ Examples
     $ echo world
     world
 
+.. shtest::
+    :cwd: tests
+
+    # Run a test in a particular working directory relative to the document.
+    $ cat hello.txt
+    world
+
+.. shtest::
+    :tempdir:
+
+    # Run a test in a temporary directory.
+    $ echo hello > world.txt
+
 Installation
 ------------
 
