@@ -1,0 +1,3 @@
+.. shtest::
+
+    $ true
