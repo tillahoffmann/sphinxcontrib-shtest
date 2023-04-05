@@ -2,6 +2,7 @@ from __future__ import annotations
 import doctest
 from docutils.nodes import document, literal_block, Node
 from docutils.parsers.rst import directives
+from pathlib import Path
 from sphinx.application import Sphinx
 from sphinx.builders import Builder
 from sphinx.environment import BuildEnvironment
@@ -9,9 +10,10 @@ from sphinx.errors import SphinxError
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.logging import getLogger
 import subprocess
+import tempfile
 import textwrap
 import types
-from typing import Iterable, List, Literal
+from typing import Iterable, List, Literal, Optional
 
 
 LOGGER = getLogger(__name__)
@@ -28,25 +30,48 @@ class ShTest:
         stream: Which stream to compare with.
         source: Source file in which the test is declared.
         lineno: Line number where the test is declared.
+        cwd: Working directory.
+        tempdir: Use a temporary working directory.
     """
     def __init__(self, command: str, want: str, want_returncode: int = 0,
-                 stream: Literal["stdout", "stderr"] = "stdout", source: str = None,
-                 lineno: int = None) -> None:
+                 stream: Literal["stdout", "stderr"] = "stdout", source: Optional[str] = None,
+                 lineno: Optional[int] = None, cwd: Optional[str] = None, tempdir: bool = False) \
+            -> None:
         self.command = command
         self.want = want if want.endswith("\n") else want + "\n"
         self.want_returncode = want_returncode
         self.stream = stream
         self.source = source
         self.lineno = lineno
+        self.cwd = cwd
+        self.tempdir = tempdir
+
+        if self.cwd and self.tempdir:
+            raise ShTestError(f"{self.format_location(self.source, self.lineno)}\n`cwd` and "
+                              "`tempdir` cannot be used together")
+
+        # Resolve the working directory relative to the source document.
+        if self.source and self.cwd:
+            self.cwd = (Path(self.source).parent / self.cwd).resolve()
 
     def run(self) -> None:
-        process = subprocess.run(self.command, text=True, shell=True, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
+        kwargs = {
+            "args": self.command,
+            "text": True,
+            "shell": True,
+            "stdout": subprocess.PIPE,
+            "stderr": subprocess.PIPE,
+        }
+        if self.tempdir:
+            with tempfile.TemporaryDirectory() as tempdir:
+                process = subprocess.run(**kwargs, cwd=tempdir)
+        else:
+            process = subprocess.run(**kwargs, cwd=self.cwd)
         got = getattr(process, self.stream)
 
         # Create a prefix for messages.
         parts = [
-            f"File \"{self.source}\", line {self.lineno}",
+            self.format_location(self.source, self.lineno),
             "Failed sh test:",
             textwrap.indent(self.command, "    "),
         ]
@@ -73,17 +98,22 @@ class ShTest:
         """
         Iterate over all sub-tests of a given node.
         """
+        kwargs = {
+            "stream": node["stream"],
+            "source": node.source,
+            "cwd": node["cwd"],
+            "tempdir": node["tempdir"],
+            "want_returncode": node["returncode"],
+        }
         command = None
         want = None
-        lineno = None
+        lineno = node["lineno"]
         for i, line in enumerate(node.astext().splitlines()):
             # This line starts a new command.
             if line.startswith("$"):
                 # If a command is already active, yield it.
                 if command:
-                    yield ShTest(command, "\n".join(want), node["returncode"], node["stream"],
-                                 node.source, lineno)
-                lineno = node['lineno'] + i
+                    yield ShTest(command, "\n".join(want), lineno=lineno, **kwargs)
                 command = line.lstrip("$ ")
                 want = []
             elif command:
@@ -91,9 +121,14 @@ class ShTest:
             elif i == 0 and line.startswith("#"):
                 pass  # We ignore a first line that starts with a comment character.
             else:
-                raise ShTestError
-        yield ShTest(command, "\n".join(want), node["returncode"], node["stream"], node.source,
-                     lineno)
+                raise ShTestError(f"{cls.format_location(node.source, lineno)}\nExpected a command "
+                                  f"starting with `$` but got `{line}`")
+            lineno += 1
+        yield ShTest(command, "\n".join(want), lineno=lineno, **kwargs)
+
+    @classmethod
+    def format_location(cls, source: str, lineno: int) -> str:
+        return f"File \"{source}\", line {lineno}"
 
 
 class ShTestError(SphinxError):
@@ -105,15 +140,18 @@ class ShTestDirective(SphinxDirective):
     option_spec = {
         'returncode': int,
         'stream': lambda x: directives.choice(x, ('stderr', 'stdout')),
+        'cwd': str,
+        'tempdir': directives.flag,
     }
 
     def run(self) -> List[Node]:
-        # Display the content unchanged but set attributes on the literal block.
+        # Display the content unchanged but set attributes on the literal block. We will use these
+        # attributes to construct test objects.
         content = '\n'.join(self.content)
         node = literal_block(
             content, content, shtest=True, language="bash", lineno=self.lineno,
-            stream=self.options.get("stream", "stdout"),
-            returncode=self.options.get("returncode", 0)
+            stream=self.options.get("stream", "stdout"), cwd=self.options.get("cwd"),
+            returncode=self.options.get("returncode", 0), tempdir="tempdir" in self.options,
         )
         return [node]
 
@@ -142,6 +180,9 @@ class ShTestBuilder(Builder):
 
     def prepare_writing(self, docnames: set[str]) -> None:
         pass
+
+    def get_target_uri(self, docname: str, typ: str = None) -> str:
+        return ""
 
 
 def setup(app: Sphinx) -> None:
