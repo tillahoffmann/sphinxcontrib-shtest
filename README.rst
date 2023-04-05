@@ -1,7 +1,17 @@
 🧪 shtest
 =========
 
-shtest tests shell commands in your Sphinx documentation. The :code:`shtest` directive supports the usual `doctest <https://www.sphinx-doc.org/en/master/usage/extensions/doctest.html>`_ syntax. It offers two options: specifying the expected return code (defaults to 0) and choosing the stream to compare with (defaults to stdout).
+.. image:: https://github.com/tillahoffmann/sphinxcontrib-shtest/actions/workflows/main.yaml/badge.svg
+    :target: https://github.com/tillahoffmann/sphinxcontrib-shtest/
+.. image:: https://img.shields.io/pypi/v/sphinxcontrib-shtest
+    :target: https://pypi.org/project/sphinxcontrib-shtest/
+
+shtest tests shell commands in your Sphinx documentation. The :code:`shtest` directive supports the usual `doctest <https://www.sphinx-doc.org/en/master/usage/extensions/doctest.html>`_ syntax. It offers the following options:
+
+- :code:`:returncode: [integer]` specifies the expected return code (defaults to 0).
+- adding the :code:`:stderr:` flag compares results with the :code:`stderr` rather than :code:`stdout` stream.
+- :code:`:cwd: [relative path]` specifies the working directory relative to the source of the document (defaults to the directory containing the source document).
+- :code:`:tempdir:` executes the test in a temporary directory.
 
 Examples
 --------
