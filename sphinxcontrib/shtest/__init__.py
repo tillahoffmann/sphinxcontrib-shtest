@@ -181,6 +181,9 @@ class ShTestBuilder(Builder):
     def prepare_writing(self, docnames: set[str]) -> None:
         pass
 
+    def get_target_uri(self, docname: str, typ: str = None) -> str:
+        return ""
+
 
 def setup(app: Sphinx) -> None:
     app.add_directive("shtest", ShTestDirective)
