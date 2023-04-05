@@ -1,5 +1,6 @@
+import colorama
 import pytest
-from sphinxcontrib.shtest import ShTest, ShTestError
+from sphinxcontrib.shtest import ShTest, ShTestError, strip_colors
 
 
 @pytest.mark.parametrize("test, match", [
@@ -16,3 +17,8 @@ def test_shtest(test: ShTest, match: str) -> None:
             test.run()
     else:
         test.run()
+
+
+def test_strip_colors() -> None:
+    colored = f"{colorama.Fore.GREEN}hello {colorama.Fore.RED}world{colorama.Fore.RESET}"
+    assert strip_colors(colored) == "hello world"

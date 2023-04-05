@@ -67,7 +67,7 @@ class ShTest:
                 process = subprocess.run(**kwargs, cwd=tempdir)
         else:
             process = subprocess.run(**kwargs, cwd=self.cwd)
-        got = getattr(process, self.stream)
+        got = strip_colors(getattr(process, self.stream))
 
         # Create a prefix for messages.
         parts = [
@@ -188,3 +188,15 @@ class ShTestBuilder(Builder):
 def setup(app: Sphinx) -> None:
     app.add_directive("shtest", ShTestDirective)
     app.add_builder(ShTestBuilder)
+
+
+def strip_colors(text: str) -> str:
+    try:
+        import colorama
+
+        for ansi_codes in [colorama.Fore, colorama.Back]:
+            for code in vars(ansi_codes).values():
+                text = text.replace(code, "")
+        return text
+    except ImportError:
+        return text
