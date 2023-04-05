@@ -13,7 +13,7 @@ import subprocess
 import tempfile
 import textwrap
 import types
-from typing import Iterable, List, Literal, Optional
+from typing import Iterable, List, Optional
 
 
 LOGGER = getLogger(__name__)
@@ -27,20 +27,19 @@ class ShTest:
         command: Command to execute.
         want: Expected output.
         want_returncode: Expected returncode.
-        stream: Which stream to compare with.
+        stderr: Read from stderr instead of stdout.
         source: Source file in which the test is declared.
         lineno: Line number where the test is declared.
         cwd: Working directory.
         tempdir: Use a temporary working directory.
     """
     def __init__(self, command: str, want: str, want_returncode: int = 0,
-                 stream: Literal["stdout", "stderr"] = "stdout", source: Optional[str] = None,
-                 lineno: Optional[int] = None, cwd: Optional[str] = None, tempdir: bool = False) \
-            -> None:
+                 stderr: bool = False, source: Optional[str] = None, lineno: Optional[int] = None,
+                 cwd: Optional[str] = None, tempdir: bool = False) -> None:
         self.command = command
         self.want = want if want.endswith("\n") else want + "\n"
         self.want_returncode = want_returncode
-        self.stream = stream
+        self.stderr = stderr
         self.source = source
         self.lineno = lineno
         self.cwd = cwd
@@ -59,15 +58,15 @@ class ShTest:
             "args": self.command,
             "text": True,
             "shell": True,
-            "stdout": subprocess.PIPE,
-            "stderr": subprocess.PIPE,
+            "stderr" if self.stderr else "stdout": subprocess.PIPE,
         }
+        process: subprocess.CompletedProcess
         if self.tempdir:
             with tempfile.TemporaryDirectory() as tempdir:
                 process = subprocess.run(**kwargs, cwd=tempdir)
         else:
             process = subprocess.run(**kwargs, cwd=self.cwd)
-        got = strip_colors(getattr(process, self.stream))
+        got = strip_colors(process.stderr if self.stderr else process.stdout)
 
         # Create a prefix for messages.
         parts = [
@@ -99,7 +98,7 @@ class ShTest:
         Iterate over all sub-tests of a given node.
         """
         kwargs = {
-            "stream": node["stream"],
+            "stderr": node["stderr"],
             "source": node.source,
             "cwd": node["cwd"],
             "tempdir": node["tempdir"],
@@ -138,10 +137,10 @@ class ShTestError(SphinxError):
 class ShTestDirective(SphinxDirective):
     has_content = True
     option_spec = {
-        'returncode': int,
-        'stream': lambda x: directives.choice(x, ('stderr', 'stdout')),
-        'cwd': str,
-        'tempdir': directives.flag,
+        "returncode": int,
+        "stderr": directives.flag,
+        "cwd": str,
+        "tempdir": directives.flag,
     }
 
     def run(self) -> List[Node]:
@@ -150,7 +149,7 @@ class ShTestDirective(SphinxDirective):
         content = '\n'.join(self.content)
         node = literal_block(
             content, content, shtest=True, language="bash", lineno=self.lineno,
-            stream=self.options.get("stream", "stdout"), cwd=self.options.get("cwd"),
+            stderr="stderr" in self.options, cwd=self.options.get("cwd"),
             returncode=self.options.get("returncode", 0), tempdir="tempdir" in self.options,
         )
         return [node]
