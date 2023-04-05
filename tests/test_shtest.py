@@ -36,6 +36,7 @@ def test_strip_colors() -> None:
     ("no-command", "Expected a command starting with"),
     ("tempdir-and-cwd", "`cwd` and `tempdir` cannot"),
     ("cwd", None),
+    ("sh", None),
 ])
 def test_directive_build(tmp_path: Path, document: str, match: Optional[str]) -> None:
     # Copy data to a temporary directory.

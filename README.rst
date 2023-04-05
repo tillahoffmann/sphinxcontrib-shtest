@@ -56,6 +56,8 @@ Examples
     # Run a test in a temporary directory.
     $ echo hello > world.txt
 
+.. sh:: ls -l
+
 Installation
 ------------
 

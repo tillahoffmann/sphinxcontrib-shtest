@@ -157,6 +157,35 @@ class ShTestDirective(SphinxDirective):
         return [node]
 
 
+class ShDirective(SphinxDirective):
+    """
+    Displays shell command output in the documentation.
+    """
+    required_arguments = 1
+    optional_arguments = float("inf")
+    has_content = False
+    option_spec = {
+        "stderr": directives.flag,
+        "cwd": str,
+    }
+
+    def run(self) -> List[Node]:
+        # Run the command and display the output.
+        parent = Path(self.state.document["source"]).parent
+        cwd = (parent / cwd) if (cwd := self.options.get("cwd")) else parent
+        stderr = "stderr" in self.options
+        kwargs = {
+            "args": " ".join(self.arguments),
+            "shell": True,
+            "text": True,
+            "stderr" if stderr else "stdout": subprocess.PIPE,
+        }
+        process = subprocess.run(**kwargs)
+        content = process.stderr if stderr else process.stdout
+        node = literal_block(content, content)
+        return [node]
+
+
 class ShTestBuilder(Builder):
     """
     Runs shell command test snippets in the documentation.
@@ -187,6 +216,7 @@ class ShTestBuilder(Builder):
 
 
 def setup(app: Sphinx) -> None:
+    app.add_directive("sh", ShDirective)
     app.add_directive("shtest", ShTestDirective)
     app.add_builder(ShTestBuilder)
 
