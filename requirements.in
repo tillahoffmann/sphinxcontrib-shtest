@@ -1,4 +1,5 @@
 -e file:.
+colorama
 cook-build
 flake8
 pip-tools

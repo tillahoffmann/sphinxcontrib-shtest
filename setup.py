@@ -6,7 +6,7 @@ long_description = long_description.replace(".. shtest::", ".. code-block::\n")
 
 setup(
     name="sphinxcontrib-shtest",
-    version="0.2.0",
+    version="0.2.1",
     packages=find_namespace_packages(),
     install_requires=[
         "sphinx",
