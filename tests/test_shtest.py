@@ -28,7 +28,7 @@ def test_strip_colors() -> None:
     assert strip_colors(colored) == "hello world"
 
 
-@pytest.mark.parametrize("document, match", [
+@pytest.mark.parametrize("document_name, match", [
     ("true", None),
     ("false", "Expected return code: 0"),
     ("false-1-tempdir", None),
@@ -38,16 +38,32 @@ def test_strip_colors() -> None:
     ("cwd", None),
     ("sh", None),
 ])
-def test_directive_build(tmp_path: Path, document: str, match: Optional[str]) -> None:
-    # Copy data to a temporary directory.
+@pytest.mark.parametrize("builder", ["html", "shtest"])
+def test_directive_build(tmp_path: Path, document_name: str, match: Optional[str], builder: str) \
+        -> None:
+    # Copy data to a temporary directory and add a header.
     (tmp_path / "conf.py").write_text("extensions = ['sphinxcontrib.shtest']")
-    document = (Path(__file__).parent / "rst" / document).with_suffix(".rst")
-    shutil.copy(document, tmp_path / "index.rst")
+    document = (Path(__file__).parent / "rst" / document_name).with_suffix(".rst")
+
+    text = document.read_text()
+    (tmp_path / "index.rst").write_text("\n".join([
+        document_name,
+        "=" * len(document_name),
+        "",
+        text
+    ]))
 
     # Run the builder.
-    app = Sphinx(tmp_path, tmp_path, tmp_path / "_build", tmp_path / "_toctree", "shtest")
-    if match:
+    outdir = tmp_path / "_build"
+    app = Sphinx(tmp_path, tmp_path, outdir, tmp_path / "doctreedir", builder)
+    if match and builder == "shtest":
         with pytest.raises(ShTestError, match=match):
             app.build()
     else:
         app.build()
+        if builder == "html":
+            # Copy the result to the output directory for inspection.
+            html = Path(__file__).parent / "html"
+            html.mkdir(exist_ok=True)
+            html = (html / document_name).with_suffix(".html")
+            shutil.copy(outdir / "index.html", html)

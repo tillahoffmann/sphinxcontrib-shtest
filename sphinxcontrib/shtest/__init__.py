@@ -166,6 +166,7 @@ class ShDirective(SphinxDirective):
     has_content = False
     option_spec = {
         "stderr": directives.flag,
+        "hide-cmd": directives.flag,
         "cwd": str,
     }
 
@@ -174,15 +175,18 @@ class ShDirective(SphinxDirective):
         parent = Path(self.state.document["source"]).parent
         cwd = (parent / cwd) if (cwd := self.options.get("cwd")) else parent
         stderr = "stderr" in self.options
+        args = " ".join(self.arguments)
         kwargs = {
-            "args": " ".join(self.arguments),
+            "args": args,
             "shell": True,
             "text": True,
             "stderr" if stderr else "stdout": subprocess.PIPE,
         }
         process = subprocess.run(**kwargs)
         content = process.stderr if stderr else process.stdout
-        node = literal_block(content, content)
+        if "hide-cmd" not in self.options:
+            content = f"$ {args}\n{content}"
+        node = literal_block(content, content, language="bash")
         return [node]
 
 
