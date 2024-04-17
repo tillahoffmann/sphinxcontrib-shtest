@@ -15,6 +15,13 @@ shtest tests shell commands in your Sphinx documentation. The :code:`shtest` dir
 - :code:`:cwd: [relative path]` specifies the working directory relative to the source of the document (defaults to the directory containing the source document).
 - :code:`:tempdir:` executes the test in a temporary directory.
 
+Installation
+------------
+
+1. Run :code:`pip install sphinxcontrib-shtest` to install the package.
+2. Add :code:`"sphinxcontrib.shtest"` to your :code:`extensions` list in :code:`conf.py` to enable the extension (see `here <https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-extensions>`__ for details).
+3. Execute :code:`sphinx-build -b shtest /path/to/source/directory /path/to/output/directory`. The :code:`-b shtest` flag executes the shell tests; run without the :code:`-b shtest` flag to build your documentation as usual.
+
 Examples
 --------
 
@@ -59,8 +66,3 @@ Examples
     $ echo hello > world.txt
 
 .. sh:: ls -l
-
-Installation
-------------
-
-Run :code:`pip install sphinxcontrib-shtest` to install the package and add :code:`"sphinxcontrib.shtest"` to your :code:`extensions` list in :code:`conf.py` (see `here <https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-extensions>`__ for details). Then execute :code:`sphinx-build -b shtest /path/to/source/directory /path/to/output/directory`.
