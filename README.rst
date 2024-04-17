@@ -5,6 +5,8 @@
     :target: https://github.com/tillahoffmann/sphinxcontrib-shtest/
 .. image:: https://img.shields.io/pypi/v/sphinxcontrib-shtest
     :target: https://pypi.org/project/sphinxcontrib-shtest/
+.. image:: https://readthedocs.org/projects/sphinxcontrib-shtest/badge/?version=latest
+    :target: https://sphinxcontrib-shtest.readthedocs.io/en/latest/?badge=latest
 
 shtest tests shell commands in your Sphinx documentation. The :code:`shtest` directive supports the usual `doctest <https://www.sphinx-doc.org/en/master/usage/extensions/doctest.html>`_ syntax. It offers the following options:
 
