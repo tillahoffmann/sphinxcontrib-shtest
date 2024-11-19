@@ -1,7 +1,7 @@
 -e file:.
+black
 colorama
 cook-build
-flake8
 pip-tools
 pytest
 pytest-cov

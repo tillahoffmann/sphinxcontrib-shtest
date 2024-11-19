@@ -33,9 +33,18 @@ class ShTest:
         cwd: Working directory.
         tempdir: Use a temporary working directory.
     """
-    def __init__(self, command: str, want: str, want_returncode: int = 0,
-                 stderr: bool = False, source: Optional[str] = None, lineno: Optional[int] = None,
-                 cwd: Optional[str] = None, tempdir: bool = False) -> None:
+
+    def __init__(
+        self,
+        command: str,
+        want: str,
+        want_returncode: int = 0,
+        stderr: bool = False,
+        source: Optional[str] = None,
+        lineno: Optional[int] = None,
+        cwd: Optional[str] = None,
+        tempdir: bool = False,
+    ) -> None:
         self.command = command
         self.want = want if want.endswith("\n") else want + "\n"
         self.want_returncode = want_returncode
@@ -46,8 +55,10 @@ class ShTest:
         self.tempdir = tempdir
 
         if self.cwd and self.tempdir:
-            raise ShTestError(f"{self.format_location(self.source, self.lineno)}\n`cwd` and "
-                              "`tempdir` cannot be used together")
+            raise ShTestError(
+                f"{self.format_location(self.source, self.lineno)}\n`cwd` and "
+                "`tempdir` cannot be used together"
+            )
 
         # Resolve the working directory relative to the source document.
         if self.source and self.cwd:
@@ -89,7 +100,9 @@ class ShTest:
 
         # Check the status code.
         if process.returncode != self.want_returncode:
-            parts.append(f"Expected return code: {self.want_returncode}\nGot: {process.returncode}")
+            parts.append(
+                f"Expected return code: {self.want_returncode}\nGot: {process.returncode}"
+            )
             failed = True
         if failed:
             raise ShTestError("\n".join(parts))
@@ -122,18 +135,20 @@ class ShTest:
             elif i == 0 and line.startswith("#"):
                 pass  # We ignore a first line that starts with a comment character.
             else:
-                raise ShTestError(f"{cls.format_location(node.source, lineno)}\nExpected a command "
-                                  f"starting with `$` but got `{line}`")
+                raise ShTestError(
+                    f"{cls.format_location(node.source, lineno)}\nExpected a command "
+                    f"starting with `$` but got `{line}`"
+                )
             lineno += 1
         yield ShTest(command, "\n".join(want), lineno=lineno, **kwargs)
 
     @classmethod
     def format_location(cls, source: str, lineno: int) -> str:
-        return f"File \"{source}\", line {lineno}"
+        return f'File "{source}", line {lineno}'
 
 
 class ShTestError(SphinxError):
-    category = 'ShTest error'
+    category = "ShTest error"
 
 
 class ShTestDirective(SphinxDirective):
@@ -148,11 +163,17 @@ class ShTestDirective(SphinxDirective):
     def run(self) -> List[Node]:
         # Display the content unchanged but set attributes on the literal block. We will use these
         # attributes to construct test objects.
-        content = '\n'.join(self.content)
+        content = "\n".join(self.content)
         node = literal_block(
-            content, content, shtest=True, language="bash", lineno=self.lineno,
-            stderr="stderr" in self.options, cwd=self.options.get("cwd"),
-            returncode=self.options.get("returncode", 0), tempdir="tempdir" in self.options,
+            content,
+            content,
+            shtest=True,
+            language="bash",
+            lineno=self.lineno,
+            stderr="stderr" in self.options,
+            cwd=self.options.get("cwd"),
+            returncode=self.options.get("returncode", 0),
+            tempdir="tempdir" in self.options,
         )
         return [node]
 
@@ -161,6 +182,7 @@ class ShDirective(SphinxDirective):
     """
     Displays shell command output in the documentation.
     """
+
     required_arguments = 1
     optional_arguments = float("inf")
     has_content = False
@@ -194,6 +216,7 @@ class ShTestBuilder(Builder):
     """
     Runs shell command test snippets in the documentation.
     """
+
     name = "shtest"
 
     def __init__(self, app: Sphinx, env: BuildEnvironment = None) -> None:
@@ -203,8 +226,10 @@ class ShTestBuilder(Builder):
 
     def write_doc(self, docname: str, doctree: document) -> None:
         # Iterate over all nodes and process them.
-        nodes = doctree.findall(lambda node: isinstance(node, literal_block)
-                                and node.attributes.get("shtest"))
+        nodes = doctree.findall(
+            lambda node: isinstance(node, literal_block)
+            and node.attributes.get("shtest")
+        )
         for node in nodes:
             for test in ShTest.from_node(node):
                 test.run()
