@@ -3,7 +3,8 @@ __pycache__
 .coverage
 .DS_Store
 *.egg-info
-dist
-docs/_build
+build/
+dist/
+docs/_build/
 htmlcov/
-tests/html
+tests/html/
